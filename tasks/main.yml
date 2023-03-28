@@ -1,0 +1,20 @@
+---
+
+- block:
+    - when: keycloak_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
+
+    - when: keycloak_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
+  tags:
+    - setup-all
+    - setup-keycloak
+    - install-all
+    - install-keycloak
+
+- block:
+    - when: not keycloak_enabled | bool
+      ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
+  tags:
+    - setup-all
+    - setup-keycloak

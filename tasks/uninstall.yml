@@ -1,0 +1,25 @@
+---
+
+- name: Check existence of Keycloak systemd service
+  ansible.builtin.stat:
+    path: "{{ devture_systemd_docker_base_systemd_path }}/{{ keycloak_identifier }}.service"
+  register: keycloak_service_stat
+
+- when: keycloak_service_stat.stat.exists | bool
+  block:
+    - name: Ensure Keycloak systemd service is stopped
+      ansible.builtin.service:
+        name: "{{ keycloak_identifier }}"
+        state: stopped
+        enabled: false
+        daemon_reload: true
+
+    - name: Ensure Keycloak systemd service does not exist
+      ansible.builtin.file:
+        path: "{{ devture_systemd_docker_base_systemd_path }}/{{ keycloak_identifier }}.service"
+        state: absent
+
+    - name: Ensure Keycloak path doesn't exist
+      ansible.builtin.file:
+        path: "{{ keycloak_base_path }}"
+        state: absent

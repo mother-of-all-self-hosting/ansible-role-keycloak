@@ -1,0 +1,52 @@
+{% if keycloak_container_labels_traefik_enabled %}
+traefik.enable=true
+
+{% if keycloak_container_labels_traefik_docker_network %}
+traefik.docker.network={{ keycloak_container_labels_traefik_docker_network }}
+{% endif %}
+
+{% set middlewares = [] %}
+
+{% if keycloak_container_labels_traefik_path_prefix != '/' %}
+traefik.http.middlewares.{{ keycloak_identifier }}-slashless-redirect.redirectregex.regex=({{ keycloak_container_labels_traefik_path_prefix | quote }})$
+traefik.http.middlewares.{{ keycloak_identifier }}-slashless-redirect.redirectregex.replacement=${1}/
+{% set middlewares = middlewares + [keycloak_identifier + '-slashless-redirect'] %}
+{% endif %}
+
+{#
+	Intentionally not adding a stripPrefix middleware.
+	When KC_HTTP_RELATIVE_PATH is set, Keycloak obeys it and serves itself under the same prefix it sees there.
+#}
+
+{% if keycloak_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
+{% for name, value in keycloak_container_labels_traefik_additional_request_headers.items() %}
+traefik.http.middlewares.{{ keycloak_identifier }}-add-request-headers.headers.customrequestheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [keycloak_identifier + '-add-request-headers'] %}
+{% endif %}
+
+{% if keycloak_container_labels_traefik_additional_response_headers.keys() | length > 0 %}
+{% for name, value in keycloak_container_labels_traefik_additional_response_headers.items() %}
+traefik.http.middlewares.{{ keycloak_identifier }}-add-response-headers.headers.customresponseheaders.{{ name }}={{ value }}
+{% endfor %}
+{% set middlewares = middlewares + [keycloak_identifier + '-add-response-headers'] %}
+{% endif %}
+
+traefik.http.routers.{{ keycloak_identifier }}.rule={{ keycloak_container_labels_traefik_rule }}
+{% if keycloak_container_labels_traefik_priority | int > 0 %}
+traefik.http.routers.{{ keycloak_identifier }}.priority={{ keycloak_container_labels_traefik_priority }}
+{% endif %}
+traefik.http.routers.{{ keycloak_identifier }}.service={{ keycloak_identifier }}
+{% if middlewares | length > 0 %}
+traefik.http.routers.{{ keycloak_identifier }}.middlewares={{ middlewares | join(',') }}
+{% endif %}
+traefik.http.routers.{{ keycloak_identifier }}.entrypoints={{ keycloak_container_labels_traefik_entrypoints }}
+traefik.http.routers.{{ keycloak_identifier }}.tls={{ keycloak_container_labels_traefik_tls | to_json }}
+{% if keycloak_container_labels_traefik_tls %}
+traefik.http.routers.{{ keycloak_identifier }}.tls.certResolver={{ keycloak_container_labels_traefik_tls_certResolver }}
+{% endif %}
+
+traefik.http.services.{{ keycloak_identifier }}.loadbalancer.server.port=8080
+{% endif %}
+
+{{ keycloak_container_labels_additional_labels }}
