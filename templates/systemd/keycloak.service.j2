@@ -31,7 +31,7 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
 			{{ arg }} \
 			{% endfor %}
 			{{ keycloak_container_image }} \
-			{{ keycloak_container_command }}
+			{{ ([keycloak_container_command] + keycloak_container_command_arguments) | join(' ') }}
 
 {% for network in keycloak_container_additional_networks %}
 ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} network connect {{ network }} {{ keycloak_identifier }}

@@ -102,6 +102,11 @@ keycloak_container_extra_arguments: []
 # By default, we start a production server.
 keycloak_container_command: start
 
+# Command arguments added to the command (keycloak_container_command)
+keycloak_container_command_arguments: "{{ keycloak_container_command_arguments_auto + keycloak_container_command_arguments_custom }}"
+keycloak_container_command_arguments_auto: []
+keycloak_container_command_arguments_custom: []
+
 # Controls the `KC_DB` environment variable
 keycloak_environment_variable_kc_db: "{{ keycloak_database_type }}"
 # Controls the `KC_DB_USERNAME` environment variable
