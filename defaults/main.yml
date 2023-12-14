@@ -104,7 +104,16 @@ keycloak_container_command: start
 
 # Command arguments added to the command (keycloak_container_command)
 keycloak_container_command_arguments: "{{ keycloak_container_command_arguments_auto + keycloak_container_command_arguments_custom }}"
-keycloak_container_command_arguments_auto: []
+keycloak_container_command_arguments_auto: |
+  {{
+    (
+      [
+        '--spi-theme-static-max-age=-1',
+        '--spi-theme-cache-themes=false',
+        '--spi-theme-cache-templates=false',
+      ] if keycloak_theme_development_mode_enabled else []
+    )
+  }}
 keycloak_container_command_arguments_custom: []
 
 # Controls the `KC_DB` environment variable
@@ -160,6 +169,12 @@ keycloak_environment_variable_keycloak_admin_password: ''
 
 # Additional environment variables.
 keycloak_environment_variables_additional_variables: ''
+
+# Controls if various command line flags are passed to Keycloak to make it not cache themes.
+# See: keycloak_container_command_arguments_auto
+# See: https://www.keycloak.org/docs/latest/server_development/#creating-a-theme
+# The same can also be done by changing using the `start-dev` command (see `keycloak_container_command`), even without passing any flags to it.
+keycloak_theme_development_mode_enabled: false
 
 keycloak_database_type: postgres
 keycloak_database_hostname: ''
