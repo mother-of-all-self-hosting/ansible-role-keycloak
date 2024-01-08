@@ -9,7 +9,7 @@ keycloak_identifier: keycloak
 keycloak_uid: ''
 keycloak_gid: ''
 
-keycloak_version: 23.0.3
+keycloak_version: 23.0.4
 
 keycloak_scheme: https
 
