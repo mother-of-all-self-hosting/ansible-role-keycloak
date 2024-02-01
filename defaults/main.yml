@@ -59,6 +59,32 @@ keycloak_container_labels_traefik_priority: 0
 keycloak_container_labels_traefik_entrypoints: web-secure
 keycloak_container_labels_traefik_tls: "{{ keycloak_container_labels_traefik_entrypoints != 'web' }}"
 keycloak_container_labels_traefik_tls_certResolver: default  # noqa var-naming
+# Controls whether the default /metrics path should be redirected elsewhere.
+# This is useful to enable when exposing the metrics elsewhere (e.g. /metrics/keycloak) and potentially behind Basic Auth there,
+# so that metrics are not also served at the original /metrics path unprotected.
+keycloak_container_labels_middleware_metrics_redirection_enabled: "{{ keycloak_container_labels_metrics_enabled and keycloak_container_labels_metrics_path_prefix != keycloak_container_labels_middleware_metrics_redirection_default_path }}"
+keycloak_container_labels_middleware_metrics_redirection_default_path: "{{ '' if keycloak_path_prefix == '/' else keycloak_path_prefix }}/metrics"
+keycloak_container_labels_middleware_metrics_redirection_target_path: "{{ keycloak_container_labels_metrics_path_prefix }}"
+
+# Controls whether the metrics-handling endpoint is enabled.
+#
+# If metrics are enabled (`keycloak_environment_variable_kc_metrics_enabled`), by default Keycloak would serve them at `/metrics`.
+# We add an explicit router for handling metrics, so we can get more control.
+# The playbook may even decide to expose metrics at a different URL (e.g. /metrics/keycloak) and reconfigure this.
+#
+# If we're handling metrics at a custom path (other than `{prefix}/metrics`) and potentially basic-auth-protecting them,
+# then we should consider blocking out access to the default metrics path, so that it doesn't serve metrics unauthenticated.
+keycloak_container_labels_metrics_enabled: "{{ keycloak_environment_variable_kc_metrics_enabled }}"
+keycloak_container_labels_metrics_hostname: "{{ keycloak_container_labels_traefik_hostname }}"
+keycloak_container_labels_metrics_path_prefix: "{{ '' if keycloak_path_prefix == '/' else keycloak_path_prefix }}/metrics"
+keycloak_container_labels_metrics_traefik_rule: "Host(`{{ keycloak_container_labels_metrics_hostname }}`) && PathPrefix(`{{ keycloak_container_labels_metrics_path_prefix }}`)"
+keycloak_container_labels_metrics_traefik_priority: 0
+keycloak_container_labels_metrics_traefik_entrypoints: web-secure
+keycloak_container_labels_metrics_traefik_tls: "{{ keycloak_container_labels_traefik_entrypoints != 'web' }}"
+keycloak_container_labels_metrics_traefik_tls_certResolver: default  # noqa var-naming
+keycloak_container_labels_metrics_middleware_basic_auth_enabled: false
+# See: https://doc.traefik.io/traefik/middlewares/http/basicauth/#users
+keycloak_container_labels_metrics_middleware_basic_auth_users: ''
 
 # Controls which additional headers to attach to all HTTP requests.
 # To add your own custom request headers, use `keycloak_container_labels_traefik_additional_response_headers_custom`
