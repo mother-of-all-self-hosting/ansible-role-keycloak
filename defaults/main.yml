@@ -181,9 +181,42 @@ keycloak_environment_variable_kc_metrics_enabled: false
 # Controls the `KC_PROXY` environment variable.
 keycloak_environment_variable_kc_proxy: "{{ 'edge' if keycloak_container_labels_traefik_enabled else 'none' }}"
 
+# Defines the root logger's level. By default, all other (category-specific) loggers inherit this level.
+#
+# See:
+# - keycloak_environment_variable_kc_log_level
+# - keycloak_environment_variable_kc_log_level_category_specific_list
+#
+# Valid logging levels are: fatal, error, warn, info, debug, trace, all, off
+keycloak_environment_variable_kc_log_level_root: info
+
 # Controls the `KC_LOG_LEVEL` environment variable.
-# Valid values are: fatal, error, warn, info, debug, trace, all, off
-keycloak_environment_variable_kc_log_level: info
+#
+# This environment variable controls the log level used by the root logger (specified in `keycloak_environment_variable_kc_log_level_root`),
+# which all loggers inherit, but may also be used for defining log levels for additional logging categories.
+keycloak_environment_variable_kc_log_level: |-
+  {{
+    (
+      [keycloak_environment_variable_kc_log_level_root]
+      +
+      keycloak_environment_variable_kc_log_level_category_specific_list
+    ) | join(',')
+  }}
+
+# Controls the category-specific log levels.
+# Unless explicitly defined, category-specific loggers inherit the root-logger's level (`keycloak_environment_variable_kc_log_level_root`).
+#
+# We set `org.keycloak.events` to `debug` by default, because interesting events related to authentication
+# (`LOGIN`, `CODE_TO_TOKEN`, `USER_INFO_REQUEST`, `LOGOUT` and potentially others) are logged at a `debug` level.
+# See:
+# - https://www.youtube.com/watch?v=Rh8LstBPBOE
+# - https://www.n-k.de/2020/12/keycloak-events-logging.html
+# - https://www.keycloak.org/server/logging#_configuring_category_specific_log_levels
+keycloak_environment_variable_kc_log_level_category_specific: "{{ keycloak_environment_variable_kc_log_level_category_specific_default | combine(keycloak_environment_variable_kc_log_level_category_specific_auto) | combine(keycloak_environment_variable_kc_log_level_category_specific_custom) }}"
+keycloak_environment_variable_kc_log_level_category_specific_default:
+  org.keycloak.events: debug
+keycloak_environment_variable_kc_log_level_category_specific_auto: {}
+keycloak_environment_variable_kc_log_level_category_specific_custom: {}
 
 # Controls the `KEYCLOAK_ADMIN` environment variable.
 # If specified, Keycloak will attempt to register the user on startup.
