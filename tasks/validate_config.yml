@@ -1,5 +1,15 @@
 ---
 
+
+- name: (Deprecation) Catch and report renamed Keycloak settings
+  ansible.builtin.fail:
+    msg: >-
+      Your configuration contains a variable, which now has a different name.
+      Please change your configuration to rename the variable (`{{ item.old }}` -> `{{ item.new }}`).
+  when: "item.old in vars"
+  with_items:
+    - {'old': 'keycloak_environment_variable_kc_proxy', 'new': '<superseded by keycloak_environment_variable_kc_proxy_headers and keycloak_environment_variable_kc_http_enabled - see https://www.keycloak.org/docs/24.0.0/upgrading/#deprecated-proxy-option>'}
+
 - name: Fail if required Keycloak settings not defined
   ansible.builtin.fail:
     msg: >

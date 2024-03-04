@@ -9,7 +9,7 @@ keycloak_identifier: keycloak
 keycloak_uid: ''
 keycloak_gid: ''
 
-keycloak_version: 23.0.7
+keycloak_version: 24.0.0
 
 keycloak_scheme: https
 
@@ -167,7 +167,8 @@ keycloak_environment_variable_kc_hostname_url: "{{ keycloak_scheme }}://{{ keycl
 # - either start a dev server, not a production server (see `keycloak_container_command`)
 # - or, keep running a production server and enable this
 # - or, keep running a production server and set KC_PROXY to true (see `keycloak_environment_variable_kc_proxy`)
-keycloak_environment_variable_kc_http_enabled: false
+# See: https://www.keycloak.org/docs/24.0.0/upgrading/#deprecated-proxy-option
+keycloak_environment_variable_kc_http_enabled: "{{ true if keycloak_container_labels_traefik_enabled else false }}"
 
 # Controls the `KC_HTTP_RELATIVE_PATH` environment variable.
 keycloak_environment_variable_kc_http_relative_path: "{{ keycloak_path_prefix }}"
@@ -178,8 +179,9 @@ keycloak_environment_variable_kc_health_enabled: false
 # Controls the `KC_METRICS_ENABLED` environment variable.
 keycloak_environment_variable_kc_metrics_enabled: false
 
-# Controls the `KC_PROXY` environment variable.
-keycloak_environment_variable_kc_proxy: "{{ 'edge' if keycloak_container_labels_traefik_enabled else 'none' }}"
+# Controls the `KC_PROXY_HEADERS` environment variable.
+# See: https://www.keycloak.org/docs/24.0.0/upgrading/#deprecated-proxy-option
+keycloak_environment_variable_kc_proxy_headers: "{{ 'xforwarded' if keycloak_container_labels_traefik_enabled else '' }}"
 
 # Defines the root logger's level. By default, all other (category-specific) loggers inherit this level.
 #
