@@ -273,6 +273,6 @@ keycloak_hsts_preload_enabled: false
 
 # List of systemd services that keycloak.service depends on
 keycloak_systemd_required_services_list: "{{ keycloak_systemd_required_systemd_services_list_default + keycloak_systemd_required_systemd_services_list_auto + keycloak_systemd_required_systemd_services_list_custom }}"
-keycloak_systemd_required_systemd_services_list_default: ['docker.service']
+keycloak_systemd_required_systemd_services_list_default: "{{ [devture_systemd_docker_base_docker_service_name] if devture_systemd_docker_base_docker_service_name else [] }}"
 keycloak_systemd_required_systemd_services_list_auto: []
 keycloak_systemd_required_systemd_services_list_custom: []
