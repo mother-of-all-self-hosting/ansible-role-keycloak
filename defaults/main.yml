@@ -1,4 +1,8 @@
+# SPDX-FileCopyrightText: 2023 - 2024 Nikita Chernyi
 # SPDX-FileCopyrightText: 2023 - 2025 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2024 Sergio Durigan Junior
+# SPDX-FileCopyrightText: 2025 MASH project contributors
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -27,8 +31,10 @@ keycloak_path_prefix: /
 keycloak_base_path: "/{{ keycloak_identifier }}"
 
 keycloak_container_image: "{{ keycloak_container_image_registry_prefix }}keycloak/keycloak:{{ keycloak_container_image_tag }}"
-keycloak_container_image_registry_prefix: quay.io/
 keycloak_container_image_tag: "{{ keycloak_version }}"
+keycloak_container_image_registry_prefix: "{{ keycloak_container_image_registry_prefix_upstream }}"
+keycloak_container_image_registry_prefix_upstream: "{{ keycloak_container_image_registry_prefix_upstream_default }}"
+keycloak_container_image_registry_prefix_upstream_default: quay.io/
 keycloak_container_image_force_pull: "{{ keycloak_container_image.endswith(':latest') }}"
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
