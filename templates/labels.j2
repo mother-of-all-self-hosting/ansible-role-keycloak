@@ -11,7 +11,7 @@ traefik.enable=true
 traefik.docker.network={{ keycloak_container_labels_traefik_docker_network }}
 {% endif %}
 
-traefik.http.services.{{ keycloak_identifier }}.loadbalancer.server.port=8080
+traefik.http.services.{{ keycloak_identifier }}.loadbalancer.server.port={{ keycloak_container_http_port }}
 
 ############################################################
 #                                                          #
