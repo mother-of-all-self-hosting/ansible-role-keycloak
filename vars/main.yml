@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
 # Ugly hack to convert the `keycloak_environment_variable_kc_log_level_category_specific` map to `["key=value", ..]`
 keycloak_environment_variable_kc_log_level_category_specific_list_stringified: "{% for cat, level in keycloak_environment_variable_kc_log_level_category_specific.items() %}{{ cat }}:{{ level }}{% if not loop.last %}#@!{% endif %}{% endfor %}"
 keycloak_environment_variable_kc_log_level_category_specific_list: "{{ keycloak_environment_variable_kc_log_level_category_specific_list_stringified | split('#@!') }}"
