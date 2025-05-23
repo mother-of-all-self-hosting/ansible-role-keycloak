@@ -4,7 +4,7 @@
 
 ---
 
-- name: Ensure Keycloak paths exist
+- name: Ensure Keycloak path exists
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -60,3 +60,4 @@
   ansible.builtin.template:
     src: "{{ role_path }}/templates/systemd/keycloak.service.j2"
     dest: "{{ devture_systemd_docker_base_systemd_path }}/{{ keycloak_identifier }}.service"
+    mode: 0644
