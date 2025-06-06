@@ -63,7 +63,7 @@ keycloak_container_labels_traefik_docker_network: "{{ keycloak_container_network
 keycloak_container_labels_traefik_hostname: "{{ keycloak_hostname }}"
 # The path prefix must either be `/` or not end with a slash (e.g. `/keycloak`).
 keycloak_container_labels_traefik_path_prefix: "{{ keycloak_path_prefix }}"
-# TODO - /admin and various other paths had better not be reverse-proxied or be protected with another mechanism (e.g. HTTP Basic Auth).
+# TODO - /admin and various other paths had better not be reverse-proxied or be protected with another mechanism (e.g. HTTP Basic authentication).
 # See: https://www.keycloak.org/server/reverseproxy#_exposed_path_recommendations
 # We should separate the rules into public and admin, metrics, etc.
 keycloak_container_labels_traefik_rule: "Host(`{{ keycloak_container_labels_traefik_hostname }}`){% if keycloak_container_labels_traefik_path_prefix != '/' %} && PathPrefix(`{{ keycloak_container_labels_traefik_path_prefix }}`){% endif %}"
@@ -72,7 +72,7 @@ keycloak_container_labels_traefik_entrypoints: web-secure
 keycloak_container_labels_traefik_tls: "{{ keycloak_container_labels_traefik_entrypoints != 'web' }}"
 keycloak_container_labels_traefik_tls_certResolver: default  # noqa var-naming
 # Controls whether the default /metrics path should be redirected elsewhere.
-# This is useful to enable when exposing the metrics elsewhere (e.g. /metrics/keycloak) and potentially behind Basic Auth there,
+# This is useful to enable when exposing the metrics elsewhere (e.g. /metrics/keycloak) and potentially behind HTTP Basic authentication there,
 # so that metrics are not also served at the original /metrics path unprotected.
 keycloak_container_labels_middleware_metrics_redirection_enabled: "{{ keycloak_container_labels_metrics_enabled and keycloak_container_labels_metrics_path_prefix != keycloak_container_labels_middleware_metrics_redirection_default_path }}"
 keycloak_container_labels_middleware_metrics_redirection_default_path: "{{ '' if keycloak_path_prefix == '/' else keycloak_path_prefix }}/metrics"
