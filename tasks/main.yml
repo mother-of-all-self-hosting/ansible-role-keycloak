@@ -4,6 +4,7 @@
 
 ---
 - name: Perform Keycloak installation tasks
+  when: keycloak_enabled | bool
   tags:
     - setup-all
     - setup-keycloak
@@ -11,17 +12,15 @@
     - install-keycloak
   block:
     - name: Validate Keycloak configuration
-      when: keycloak_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/validate_config.yml"
     - name: Install Keycloak
-      when: keycloak_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/install.yml"
 
 - name: Perform Keycloak uninstallation tasks
+  when: not keycloak_enabled | bool
   tags:
     - setup-all
     - setup-keycloak
   block:
     - name: Uninstall Keycloak
-      when: not keycloak_enabled | bool
       ansible.builtin.include_tasks: "{{ role_path }}/tasks/uninstall.yml"
