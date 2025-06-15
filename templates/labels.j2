@@ -34,8 +34,8 @@ traefik.http.middlewares.{{ keycloak_identifier }}-default-metrics-path-redirect
 {% endif %}
 
 {#
-	Intentionally not adding a stripPrefix middleware.
-	When KC_HTTP_RELATIVE_PATH is set, Keycloak obeys it and serves itself under the same prefix it sees there.
+  Intentionally not adding a stripPrefix middleware.
+  When KC_HTTP_RELATIVE_PATH is set, Keycloak obeys it and serves itself under the same prefix it sees there.
 #}
 
 {% if keycloak_container_labels_traefik_additional_request_headers.keys() | length > 0 %}
