@@ -36,6 +36,8 @@ keycloak_container_image_registry_prefix_upstream: "{{ keycloak_container_image_
 keycloak_container_image_registry_prefix_upstream_default: quay.io/
 keycloak_container_image_force_pull: "{{ keycloak_container_image.endswith(':latest') }}"
 
+keycloak_container_image_self_build: false
+
 # Specifies how the container publishes its HTTP port
 #
 # Takes an "<ip>:<port>" value (e.g. "127.0.0.1:8080"), just a port number or an empty string to not expose.
