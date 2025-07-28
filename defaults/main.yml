@@ -101,7 +101,7 @@ keycloak_container_labels_metrics_middleware_basic_auth_enabled: false
 keycloak_container_labels_metrics_middleware_basic_auth_users: ''
 
 # Controls which additional headers to attach to all HTTP requests.
-# To add your own custom request headers, use `keycloak_container_labels_traefik_additional_response_headers_custom`
+# To add your own custom request headers, use `keycloak_container_labels_traefik_additional_request_headers_custom`
 keycloak_container_labels_traefik_additional_request_headers: "{{ keycloak_container_labels_traefik_additional_request_headers_auto | combine(keycloak_container_labels_traefik_additional_request_headers_custom) }}"
 keycloak_container_labels_traefik_additional_request_headers_auto: {}
 keycloak_container_labels_traefik_additional_request_headers_custom: {}
