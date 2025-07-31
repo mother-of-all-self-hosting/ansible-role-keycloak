@@ -133,7 +133,9 @@ keycloak_container_labels_additional_labels: ''
 # if you wish to mount your own files into the container.
 # Contains definition objects like this: `{"type": "bind", "src": "/outside", "dst": "/inside", "options": "readonly"}.
 # See the `--mount` documentation for the `docker run` command.
-keycloak_container_additional_volumes: []
+keycloak_container_additional_volumes: "{{ keycloak_container_additional_volumes_auto + keycloak_container_additional_volumes_custom }}"
+keycloak_container_additional_volumes_auto: []
+keycloak_container_additional_volumes_custom: []
 
 # A list of extra arguments to pass to the container
 keycloak_container_extra_arguments: []
