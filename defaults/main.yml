@@ -272,13 +272,13 @@ keycloak_environment_variable_kc_log_level_category_specific_default:
 keycloak_environment_variable_kc_log_level_category_specific_auto: {}
 keycloak_environment_variable_kc_log_level_category_specific_custom: {}
 
-# Controls the `KEYCLOAK_ADMIN` environment variable.
+# Controls the `KC_BOOTSTRAP_ADMIN_USERNAME` environment variable.
 # If specified, Keycloak will attempt to register the user on startup.
 # If the user already exists, it will report an error but will continue running.
-keycloak_environment_variable_keycloak_admin: ''
-# Controls the `KEYCLOAK_ADMIN_PASSWORD` environment variable.
+keycloak_environment_variable_kc_bootstrap_admin_username: ''
+# Controls the `KC_BOOTSTRAP_ADMIN_PASSWORD` environment variable.
 # Subsequent changes to the password will not affect the already-registered user (if any).
-keycloak_environment_variable_keycloak_admin_password: ''
+keycloak_environment_variable_kc_bootstrap_admin_password: ''
 
 # Controls if various command line flags are passed to Keycloak to make it not cache themes.
 # See: keycloak_container_command_arguments_auto
