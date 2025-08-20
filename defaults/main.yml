@@ -286,7 +286,11 @@ keycloak_environment_variable_kc_bootstrap_admin_password: ''
 # The same can also be done by changing using the `start-dev` command (see `keycloak_container_command`), even without passing any flags to it.
 keycloak_theme_development_mode_enabled: false
 
+# Specify database to use
+# Valid values: mariadb, mssql, mysql, oracle, postgres
+# See: https://www.keycloak.org/server/db#_supported_databases
 keycloak_database_type: postgres
+
 keycloak_database_hostname: ''
 keycloak_database_port: 5432
 keycloak_database_name: keycloak
