@@ -15,7 +15,7 @@ keycloak_identifier: keycloak
 keycloak_base_path: "/{{ keycloak_identifier }}"
 
 # renovate: datasource=docker depName=quay.io/keycloak/keycloak versioning=semver
-keycloak_version: 26.3.2
+keycloak_version: 26.3.3
 
 keycloak_uid: ''
 keycloak_gid: ''
