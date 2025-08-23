@@ -174,7 +174,10 @@ keycloak_systemd_required_services_list_auto: []
 keycloak_systemd_required_services_list_custom: []
 
 # List of systemd services that the Keycloak systemd service wants
-keycloak_systemd_wanted_services_list: []
+keycloak_systemd_wanted_services_list: "{{ keycloak_systemd_wanted_services_list_default + keycloak_systemd_wanted_services_list_auto + keycloak_systemd_wanted_services_list_custom }}"
+keycloak_systemd_wanted_services_list_default: []
+keycloak_systemd_wanted_services_list_auto: []
+keycloak_systemd_wanted_services_list_custom: []
 
 # The command to run in the container.
 # By default, we start a production server.
