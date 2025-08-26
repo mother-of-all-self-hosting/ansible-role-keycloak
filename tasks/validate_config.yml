@@ -42,6 +42,12 @@
       keycloak_database_type must be 'mariadb', 'mssql', 'mysql', 'oracle', or 'postgres'
   when: "keycloak_database_type not in ['mariadb', 'mssql', 'mysql', 'oracle', 'postgres']"
 
+- name: Fail if Keycloak logging level is invalid
+  ansible.builtin.fail:
+    msg: >-
+      keycloak_environment_variable_kc_log_level_root must be 'fatal', 'error', 'warn', 'info', 'debug', 'trace', 'all', or 'off'
+  when: "keycloak_environment_variable_kc_log_level_root not in ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'all', 'off']"
+
 - name: Run if Traefik is enabled
   when: keycloak_container_labels_traefik_enabled | bool
   block:
