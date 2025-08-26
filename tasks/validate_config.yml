@@ -1,4 +1,5 @@
 # SPDX-FileCopyrightText: 2023 Slavi Pantaleev
+# SPDX-FileCopyrightText: 2025 Suguru Hirahara
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -34,6 +35,12 @@
     - keycloak_database_name
     - keycloak_database_username
     - keycloak_database_password
+
+- name: Fail if Keycloak database type is invalid
+  ansible.builtin.fail:
+    msg: >-
+      keycloak_database_type must be 'mariadb', 'mssql', 'mysql', 'oracle', or 'postgres'
+  when: "keycloak_database_type not in ['mariadb', 'mssql', 'mysql', 'oracle', 'postgres']"
 
 - name: Run if Traefik is enabled
   when: keycloak_container_labels_traefik_enabled | bool
