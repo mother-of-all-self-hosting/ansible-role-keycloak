@@ -115,7 +115,7 @@ keycloak_container_labels_traefik_additional_response_headers: "{{ keycloak_cont
 keycloak_container_labels_traefik_additional_response_headers_auto: |
   {{
     {}
-    | combine ({'Permission-Policy': keycloak_http_header_content_permission_policy} if keycloak_http_header_content_permission_policy else {})
+    | combine ({'Permissions-Policy': keycloak_http_header_permissions_policy} if keycloak_http_header_permissions_policy else {})
   }}
 keycloak_container_labels_traefik_additional_response_headers_custom: {}
 
@@ -140,9 +140,9 @@ keycloak_container_additional_volumes_custom: []
 # A list of extra arguments to pass to the container
 keycloak_container_extra_arguments: []
 
-# Specifies the value of the `Permission-Policy` header.
-# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permission-Policy
-keycloak_http_header_content_permission_policy: "{{ 'interest-cohort=()' if keycloak_floc_optout_enabled else '' }}"
+# Specifies the value of the `Permissions-Policy` header.
+# See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
+keycloak_http_header_permissions_policy: "{{ 'interest-cohort=()' if keycloak_floc_optout_enabled else '' }}"
 
 # Controls whether to send a "Permissions-Policy interest-cohort=();" header along with all responses
 #
@@ -152,7 +152,7 @@ keycloak_http_header_content_permission_policy: "{{ 'interest-cohort=()' if keyc
 # - https://amifloced.org/
 #
 # Of course, a better solution is to just stop using browsers (like Chrome), which participate in such tracking practices.
-# See: `keycloak_content_permission_policy`
+# See: `keycloak_http_header_permissions_policy`
 keycloak_floc_optout_enabled: true
 
 # Controls if HSTS preloading is enabled
