@@ -97,7 +97,7 @@ keycloak_container_labels_metrics_traefik_entrypoints: web-secure
 keycloak_container_labels_metrics_traefik_tls: "{{ keycloak_container_labels_traefik_entrypoints != 'web' }}"
 keycloak_container_labels_metrics_traefik_tls_certResolver: default  # noqa var-naming
 keycloak_container_labels_metrics_middleware_basic_auth_enabled: false
-# See: https://doc.traefik.io/traefik/middlewares/http/basicauth/#users
+# See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
 keycloak_container_labels_metrics_middleware_basic_auth_users: ''
 
 # Controls which additional headers to attach to all HTTP requests.
