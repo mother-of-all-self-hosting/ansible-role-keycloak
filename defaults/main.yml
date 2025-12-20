@@ -138,7 +138,9 @@ keycloak_container_additional_volumes_auto: []
 keycloak_container_additional_volumes_custom: []
 
 # A list of extra arguments to pass to the container
-keycloak_container_extra_arguments: []
+keycloak_container_extra_arguments: "{{ keycloak_container_extra_arguments_auto + keycloak_container_extra_arguments_custom }}"
+keycloak_container_extra_arguments_auto: []
+keycloak_container_extra_arguments_custom: []
 
 # Specifies the value of the `Permissions-Policy` header.
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
