@@ -197,6 +197,9 @@ keycloak_container_command_arguments_auto: |
   }}
 keycloak_container_command_arguments_custom: []
 
+# Specify the timezone
+keycloak_environment_variables_tz: UTC
+
 # Controls the `KC_DB` environment variable
 keycloak_environment_variable_kc_db: "{{ keycloak_database_type }}"
 # Controls the `KC_DB_USERNAME` environment variable
