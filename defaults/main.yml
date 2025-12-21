@@ -17,11 +17,11 @@ keycloak_base_path: "/{{ keycloak_identifier }}"
 # renovate: datasource=docker depName=quay.io/keycloak/keycloak versioning=semver
 keycloak_version: 26.4.7
 
-keycloak_uid: ''
-keycloak_gid: ''
+keycloak_uid: ""
+keycloak_gid: ""
 
 # The hostname at which keycloak is served.
-keycloak_hostname: ''
+keycloak_hostname: ""
 
 keycloak_scheme: https
 
@@ -41,7 +41,7 @@ keycloak_container_image_self_build: false
 # Specifies how the container publishes its HTTP port
 #
 # Takes an "<ip>:<port>" value (e.g. "127.0.0.1:8080"), just a port number or an empty string to not expose.
-keycloak_container_http_bind_port: ''
+keycloak_container_http_bind_port: ""
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 keycloak_container_network: "{{ keycloak_identifier }}"
@@ -98,7 +98,7 @@ keycloak_container_labels_metrics_traefik_tls: "{{ keycloak_container_labels_tra
 keycloak_container_labels_metrics_traefik_tls_certResolver: default  # noqa var-naming
 keycloak_container_labels_metrics_middleware_basic_auth_enabled: false
 # See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
-keycloak_container_labels_metrics_middleware_basic_auth_users: ''
+keycloak_container_labels_metrics_middleware_basic_auth_users: ""
 
 # Controls which additional headers to attach to all HTTP requests.
 # To add your own custom request headers, use `keycloak_container_labels_traefik_additional_request_headers_custom`
@@ -286,10 +286,10 @@ keycloak_environment_variable_kc_log_level_category_specific_custom: {}
 # Controls the `KC_BOOTSTRAP_ADMIN_USERNAME` environment variable.
 # If specified, Keycloak will attempt to register the user on startup.
 # If the user already exists, it will report an error but will continue running.
-keycloak_environment_variable_kc_bootstrap_admin_username: ''
+keycloak_environment_variable_kc_bootstrap_admin_username: ""
 # Controls the `KC_BOOTSTRAP_ADMIN_PASSWORD` environment variable.
 # Subsequent changes to the password will not affect the already-registered user (if any).
-keycloak_environment_variable_kc_bootstrap_admin_password: ''
+keycloak_environment_variable_kc_bootstrap_admin_password: ""
 
 # Controls if various command line flags are passed to Keycloak to make it not cache themes.
 # See: keycloak_container_command_arguments_auto
@@ -302,11 +302,11 @@ keycloak_theme_development_mode_enabled: false
 # See: https://www.keycloak.org/server/db#_supported_databases
 keycloak_database_type: postgres
 
-keycloak_database_hostname: ''
+keycloak_database_hostname: ""
 keycloak_database_port: 5432
 keycloak_database_name: keycloak
 keycloak_database_username: keycloak
-keycloak_database_password: ''
+keycloak_database_password: ""
 
 # Additional environment variables.
-keycloak_environment_variables_additional_variables: ''
+keycloak_environment_variables_additional_variables: ""
