@@ -140,7 +140,7 @@ keycloak_container_additional_volumes: "{{ keycloak_container_additional_volumes
 keycloak_container_additional_volumes_auto: []
 keycloak_container_additional_volumes_custom: []
 
-# A list of extra arguments to pass to the container
+# A list of extra arguments to pass to the container (`docker create` command)
 keycloak_container_extra_arguments: "{{ keycloak_container_extra_arguments_auto + keycloak_container_extra_arguments_custom }}"
 keycloak_container_extra_arguments_auto: []
 keycloak_container_extra_arguments_custom: []
