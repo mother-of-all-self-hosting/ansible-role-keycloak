@@ -120,4 +120,6 @@ traefik.http.routers.{{ keycloak_identifier }}-metrics.tls.certResolver={{ keycl
 
 {% endif %}
 
-{{ keycloak_container_labels_additional_labels }}
+{% for arg in keycloak_container_labels_additional_labels %}
+{{ arg }}
+{% endfor %}
