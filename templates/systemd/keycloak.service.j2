@@ -27,8 +27,8 @@ ExecStartPre={{ devture_systemd_docker_base_host_command_docker }} create \
       --log-driver=none \
       --cap-drop=ALL \
       --network={{ keycloak_container_network }} \
-      {% if keycloak_container_http_bind_port %}
-      -p {{ keycloak_container_http_bind_port }}:{{ keycloak_container_http_port }} \
+      {% if keycloak_container_http_host_bind_port %}
+      -p {{ keycloak_container_http_host_bind_port }}:{{ keycloak_container_http_port }} \
       {% endif %}
       --env-file={{ keycloak_base_path }}/env \
       --label-file={{ keycloak_base_path }}/labels \
