@@ -20,10 +20,11 @@ keycloak_version: 26.5.0
 keycloak_uid: ""
 keycloak_gid: ""
 
+# The scheme used for serving keycloak.
+keycloak_scheme: https
+
 # The hostname at which keycloak is served.
 keycloak_hostname: ""
-
-keycloak_scheme: https
 
 # The path at which keycloak is served.
 # This value must either be `/` or not end with a slash (e.g. `/keycloak`).
@@ -38,10 +39,10 @@ keycloak_container_image_force_pull: "{{ keycloak_container_image.endswith(':lat
 
 keycloak_container_image_self_build: false
 
-# Specifies how the container publishes its HTTP port
+# Controls whether the container exposes its HTTP port (tcp/8080 in the container).
 #
-# Takes an "<ip>:<port>" value (e.g. "127.0.0.1:8080"), just a port number or an empty string to not expose.
-keycloak_container_http_bind_port: ""
+# Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
+keycloak_container_http_host_bind_port: ""
 
 # The base container network. It will be auto-created by this role if it doesn't exist already.
 keycloak_container_network: "{{ keycloak_identifier }}"
