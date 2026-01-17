@@ -39,13 +39,13 @@ keycloak_container_image_force_pull: "{{ keycloak_container_image.endswith(':lat
 
 keycloak_container_image_self_build: false
 
+# The base container network. It will be auto-created by this role if it doesn't exist already.
+keycloak_container_network: "{{ keycloak_identifier }}"
+
 # Controls whether the container exposes its HTTP port (tcp/8080 in the container).
 #
 # Takes an "<ip>:<port>" or "<port>" value (e.g. "127.0.0.1:2586"), or empty string to not expose.
 keycloak_container_http_host_bind_port: ""
-
-# The base container network. It will be auto-created by this role if it doesn't exist already.
-keycloak_container_network: "{{ keycloak_identifier }}"
 
 # The port number in the container
 keycloak_container_http_port: 8080
