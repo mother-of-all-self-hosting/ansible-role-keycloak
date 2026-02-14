@@ -29,6 +29,7 @@
       community.docker.docker_network:
         name: "{{ keycloak_container_network }}"
         state: absent
+      register: keycloak_network_deletion_result
 
     - name: Ensure Keycloak container network does not exist via ansible.builtin.command
       when: devture_systemd_docker_base_container_network_creation_method == 'command'
@@ -36,8 +37,8 @@
         cmd: >-
           {{ devture_systemd_docker_base_host_command_docker }} network rm
           {{ keycloak_container_network }}
-      register: network_deletion_result
-      changed_when: keycloak_container_network in network_deletion_result.stdout
+      register: keycloak_network_deletion_result
+      changed_when: keycloak_container_network in keycloak_network_deletion_result.stdout
 
     - name: Ensure Keycloak path does not exist
       ansible.builtin.file:
