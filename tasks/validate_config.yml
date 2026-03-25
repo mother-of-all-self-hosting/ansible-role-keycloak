@@ -34,8 +34,6 @@
     - keycloak_path_prefix
     - keycloak_container_network
     - keycloak_database_hostname
-    - keycloak_database_name
-    - keycloak_database_username
     - keycloak_database_password
 
 - name: Fail if Keycloak database type is invalid

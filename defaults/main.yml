@@ -340,9 +340,9 @@ keycloak_database_type: postgres
 # Specify database configuration
 keycloak_database_hostname: ""
 keycloak_database_port: 5432
-keycloak_database_name: keycloak
 keycloak_database_username: keycloak
 keycloak_database_password: ""
+keycloak_database_name: keycloak
 
 # Additional environment variables.
 keycloak_environment_variables_additional_variables: ""
