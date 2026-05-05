@@ -20,6 +20,7 @@
     - { "old": "keycloak_environment_variable_keycloak_admin", "new": "keycloak_environment_variable_kc_bootstrap_admin_username" }
     - { "old": "keycloak_environment_variable_keycloak_admin_password", "new": "keycloak_environment_variable_kc_bootstrap_admin_password" }
     - { "old": "keycloak_http_header_content_permission_policy", "new": "keycloak_http_header_permissions_policy" }
+    - { "old": "keycloak_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
 
 - name: Fail if required Keycloak settings not defined
   ansible.builtin.fail:

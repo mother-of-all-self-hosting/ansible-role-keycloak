@@ -35,7 +35,6 @@ keycloak_container_image_tag: "{{ keycloak_version }}"
 keycloak_container_image_registry_prefix: "{{ keycloak_container_image_registry_prefix_upstream }}"
 keycloak_container_image_registry_prefix_upstream: "{{ keycloak_container_image_registry_prefix_upstream_default }}"
 keycloak_container_image_registry_prefix_upstream_default: quay.io/
-keycloak_container_image_force_pull: "{{ keycloak_container_image.endswith(':latest') }}"
 
 keycloak_container_image_self_build: false
 
