@@ -22,6 +22,14 @@
     - { "old": "keycloak_http_header_content_permission_policy", "new": "keycloak_http_header_permissions_policy" }
     - { "old": "keycloak_container_image_force_pull", "new": "<removed> (the new community.docker.docker_image_pull module handles this natively)" }
 
+- name: (Deprecation) Catch and report renamed settings
+  ansible.builtin.fail:
+    msg: |-
+      Please change your configuration file (vars.yml) to rename all `keycloak_container_labels_metrics_`-prefixed variables (`keycloak_container_labels_metrics_*` -> `keycloak_container_labels_traefik_metrics_*`).
+
+      The following variables in your configuration need to be renamed: {{ lookup('ansible.builtin.varnames', '^keycloak_container_labels_metrics_.+', wantlist=True) | join(', ') }}
+  when: "lookup('ansible.builtin.varnames', '^keycloak_container_labels_metrics_.+', wantlist=True) | length > 0"
+
 - name: Fail if required Keycloak settings not defined
   ansible.builtin.fail:
     msg: >-

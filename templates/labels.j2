@@ -78,7 +78,7 @@ traefik.http.routers.{{ keycloak_identifier }}.tls.certResolver={{ keycloak_cont
 ############################################################
 
 
-{% if keycloak_container_labels_metrics_enabled %}
+{% if keycloak_container_labels_traefik_metrics_enabled %}
 ############################################################
 #                                                          #
 # Metrics                                                  #
@@ -87,8 +87,8 @@ traefik.http.routers.{{ keycloak_identifier }}.tls.certResolver={{ keycloak_cont
 
 {% set middlewares = [] %}
 
-{% if keycloak_container_labels_metrics_middleware_basic_auth_enabled %}
-traefik.http.middlewares.{{ keycloak_identifier }}-metrics-basic-auth.basicauth.users={{ keycloak_container_labels_metrics_middleware_basic_auth_users }}
+{% if keycloak_container_labels_traefik_metrics_middleware_basic_auth_enabled %}
+traefik.http.middlewares.{{ keycloak_identifier }}-metrics-basic-auth.basicauth.users={{ keycloak_container_labels_traefik_metrics_middleware_basic_auth_users }}
 {% set middlewares = middlewares + [keycloak_identifier + '-metrics-basic-auth'] %}
 {% endif %}
 
@@ -97,18 +97,18 @@ traefik.http.middlewares.{{ keycloak_identifier }}-metrics-replace-path.replacep
 
 traefik.http.routers.{{ keycloak_identifier }}-metrics.middlewares={{ middlewares | join(',') }}
 
-traefik.http.routers.{{ keycloak_identifier }}-metrics.rule={{ keycloak_container_labels_metrics_traefik_rule }}
+traefik.http.routers.{{ keycloak_identifier }}-metrics.rule={{ keycloak_container_labels_traefik_metrics_traefik_rule }}
 
-{% if keycloak_container_labels_metrics_traefik_priority | int > 0 %}
-traefik.http.routers.{{ keycloak_identifier }}-metrics.priority={{ keycloak_container_labels_metrics_traefik_priority }}
+{% if keycloak_container_labels_traefik_metrics_traefik_priority | int > 0 %}
+traefik.http.routers.{{ keycloak_identifier }}-metrics.priority={{ keycloak_container_labels_traefik_metrics_traefik_priority }}
 {% endif %}
 
 traefik.http.routers.{{ keycloak_identifier }}-metrics.service={{ keycloak_identifier }}
-traefik.http.routers.{{ keycloak_identifier }}-metrics.entrypoints={{ keycloak_container_labels_metrics_traefik_entrypoints }}
+traefik.http.routers.{{ keycloak_identifier }}-metrics.entrypoints={{ keycloak_container_labels_traefik_metrics_traefik_entrypoints }}
 
-traefik.http.routers.{{ keycloak_identifier }}-metrics.tls={{ keycloak_container_labels_metrics_traefik_tls | to_json }}
-{% if keycloak_container_labels_metrics_traefik_tls %}
-traefik.http.routers.{{ keycloak_identifier }}-metrics.tls.certResolver={{ keycloak_container_labels_metrics_traefik_tls_certResolver }}
+traefik.http.routers.{{ keycloak_identifier }}-metrics.tls={{ keycloak_container_labels_traefik_metrics_traefik_tls | to_json }}
+{% if keycloak_container_labels_traefik_metrics_traefik_tls %}
+traefik.http.routers.{{ keycloak_identifier }}-metrics.tls.certResolver={{ keycloak_container_labels_traefik_metrics_traefik_tls_certResolver }}
 {% endif %}
 
 ############################################################
