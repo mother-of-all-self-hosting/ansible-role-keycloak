@@ -76,12 +76,6 @@ keycloak_container_labels_traefik_priority: 0
 keycloak_container_labels_traefik_entrypoints: web-secure
 keycloak_container_labels_traefik_tls: "{{ keycloak_container_labels_traefik_entrypoints != 'web' }}"
 keycloak_container_labels_traefik_tls_certResolver: default  # noqa var-naming
-# Controls whether the default /metrics path should be redirected elsewhere.
-# This is useful to enable when exposing the metrics elsewhere (e.g. /metrics/keycloak) and potentially behind HTTP Basic authentication there,
-# so that metrics are not also served at the original /metrics path unprotected.
-keycloak_container_labels_middleware_metrics_redirection_enabled: "{{ keycloak_container_labels_traefik_metrics_enabled and keycloak_container_labels_traefik_metrics_path_prefix != keycloak_container_labels_middleware_metrics_redirection_default_path }}"
-keycloak_container_labels_middleware_metrics_redirection_default_path: "{{ '' if keycloak_path_prefix == '/' else keycloak_path_prefix }}/metrics"
-keycloak_container_labels_middleware_metrics_redirection_target_path: "{{ keycloak_container_labels_traefik_metrics_path_prefix }}"
 
 # Controls whether the metrics-handling endpoint is enabled.
 #
@@ -102,6 +96,13 @@ keycloak_container_labels_traefik_metrics_traefik_tls_certResolver: default  # n
 keycloak_container_labels_traefik_metrics_middleware_basic_auth_enabled: false
 # See: https://doc.traefik.io/traefik/reference/routing-configuration/http/middlewares/basicauth/
 keycloak_container_labels_traefik_metrics_middleware_basic_auth_users: ""
+
+# Controls whether the default /metrics path should be redirected elsewhere.
+# This is useful to enable when exposing the metrics elsewhere (e.g. /metrics/keycloak) and potentially behind HTTP Basic authentication there,
+# so that metrics are not also served at the original /metrics path unprotected.
+keycloak_container_labels_traefik_metrics_middleware_redirection_enabled: "{{ keycloak_container_labels_traefik_metrics_enabled and keycloak_container_labels_traefik_metrics_path_prefix != keycloak_container_labels_traefik_metrics_middleware_redirection_default_path }}"
+keycloak_container_labels_traefik_metrics_middleware_redirection_default_path: "{{ '' if keycloak_path_prefix == '/' else keycloak_path_prefix }}/metrics"
+keycloak_container_labels_traefik_metrics_middleware_redirection_target_path: "{{ keycloak_container_labels_traefik_metrics_path_prefix }}"
 
 # Controls which additional headers to attach to all HTTP requests.
 # To add your own custom request headers, use `keycloak_container_labels_traefik_additional_request_headers_custom`

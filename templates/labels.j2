@@ -27,9 +27,9 @@ traefik.http.middlewares.{{ keycloak_identifier }}-slashless-redirect.redirectre
 {% set middlewares = middlewares + [keycloak_identifier + '-slashless-redirect'] %}
 {% endif %}
 
-{% if keycloak_container_labels_middleware_metrics_redirection_enabled %}
-traefik.http.middlewares.{{ keycloak_identifier }}-default-metrics-path-redirect.redirectregex.regex={{ keycloak_container_labels_middleware_metrics_redirection_default_path | quote }}
-traefik.http.middlewares.{{ keycloak_identifier }}-default-metrics-path-redirect.redirectregex.replacement={{ keycloak_container_labels_middleware_metrics_redirection_target_path }}
+{% if keycloak_container_labels_traefik_metrics_middleware_redirection_enabled %}
+traefik.http.middlewares.{{ keycloak_identifier }}-default-metrics-path-redirect.redirectregex.regex={{ keycloak_container_labels_traefik_metrics_middleware_redirection_default_path | quote }}
+traefik.http.middlewares.{{ keycloak_identifier }}-default-metrics-path-redirect.redirectregex.replacement={{ keycloak_container_labels_traefik_metrics_middleware_redirection_target_path }}
 {% set middlewares = middlewares + [keycloak_identifier + '-default-metrics-path-redirect'] %}
 {% endif %}
 
