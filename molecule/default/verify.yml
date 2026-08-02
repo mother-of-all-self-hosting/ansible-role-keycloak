@@ -1,0 +1,35 @@
+# SPDX-FileCopyrightText: 2026 Suguru Hirahara
+# SPDX-FileCopyrightText: 2026 spatterlight
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+---
+- name: Verify Keycloak systemd service
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Wait for Keycloak service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: keycloak.service
+      register: keycloak_service
+      until: keycloak_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert Keycloak service is active
+      ansible.builtin.assert:
+        that: keycloak_service.status.ActiveState == 'active'
+        fail_msg: "keycloak.service not active ({{ keycloak_service.status.ActiveState }})"
+        success_msg: "keycloak.service is active"
+
+    - name: Retrieve Keycloak service log for debugging
+      when: keycloak_debug_service_enabled | bool
+      ansible.builtin.command:
+        cmd: journalctl -xeu keycloak.service
+      changed_when: false
+
+    - name: Show Keycloak systemd service status summary
+      ansible.builtin.debug:
+        msg:
+          - "Keycloak systemd: {{ keycloak_service.status.ActiveState }}"
