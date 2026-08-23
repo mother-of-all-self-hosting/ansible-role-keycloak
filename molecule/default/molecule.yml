@@ -37,11 +37,11 @@ provisioner:
         keycloak_scheme: http
         keycloak_hostname: localhost
         keycloak_container_labels_traefik_enabled: false
-        keycloak_database_type: postgres
         keycloak_environment_variable_kc_bootstrap_admin_username: username
         keycloak_environment_variable_kc_bootstrap_admin_password: password
 
-        # Variables required for MediaWiki to connect to the Postgres database
+        # Variables required for Keycloak to connect to the Postgres database
+        keycloak_database_type: postgres
         keycloak_database_hostname: "{{ postgres_connection_hostname }}"
         keycloak_database_port: "{{ postgres_connection_port }}"
         keycloak_database_username: my_database_username
