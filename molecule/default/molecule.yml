@@ -31,14 +31,55 @@ provisioner:
         # Helper variables
         keycloak_debug_service_enabled: false
 
+        # The port on the host that Keycloak's HTTP listener is published on.
+        keycloak_molecule_http_bind_port: 8080
+
+        # The port on the host that Keycloak's management listener is published
+        # on. Since Keycloak 25 the health and metrics endpoints are served
+        # there rather than on the HTTP port, and the role has no variable for
+        # publishing it, so the scenario does it through
+        # `keycloak_container_extra_arguments_custom` below.
+        keycloak_molecule_management_bind_port: 9000
+
+        # The administrator that Keycloak registers on its first boot. The
+        # verify play authenticates as this user against the admin API.
+        keycloak_molecule_admin_username: username
+        keycloak_molecule_admin_password: password
+
         # Variables for Keycloak
         keycloak_uid: 1000
         keycloak_gid: 1000
         keycloak_scheme: http
         keycloak_hostname: localhost
+
+        # A prefix other than `/`, so that the verify play can observe this
+        # variable reaching the running server: the role passes it as
+        # `KC_HTTP_RELATIVE_PATH`, which moves every endpoint Keycloak serves
+        # (including the health endpoints on the management port) underneath it.
+        keycloak_path_prefix: /keycloak
+
         keycloak_container_labels_traefik_enabled: false
-        keycloak_environment_variable_kc_bootstrap_admin_username: username
-        keycloak_environment_variable_kc_bootstrap_admin_password: password
+
+        # `keycloak_environment_variable_kc_http_enabled` defaults to whatever
+        # `keycloak_container_labels_traefik_enabled` is, and the role starts a
+        # production server (`keycloak_container_command: start`), which refuses
+        # to boot without either HTTPS key material or HTTP explicitly enabled:
+        # "Key material not provided to setup HTTPS". With Traefik turned off
+        # above, this scenario has to turn HTTP on by hand.
+        keycloak_environment_variable_kc_http_enabled: true
+
+        # Makes Keycloak serve /health/live and /health/ready on its management
+        # port. The verify play waits on those, because a Quarkus server accepts
+        # connections long before it has finished migrating its database.
+        keycloak_environment_variable_kc_health_enabled: true
+
+        keycloak_container_http_host_bind_port: "127.0.0.1:{{ keycloak_molecule_http_bind_port }}"
+
+        keycloak_container_extra_arguments_custom:
+          - "-p 127.0.0.1:{{ keycloak_molecule_management_bind_port }}:9000"
+
+        keycloak_environment_variable_kc_bootstrap_admin_username: "{{ keycloak_molecule_admin_username }}"
+        keycloak_environment_variable_kc_bootstrap_admin_password: "{{ keycloak_molecule_admin_password }}"
 
         # Variables required for Keycloak to connect to the Postgres database
         keycloak_database_type: postgres
