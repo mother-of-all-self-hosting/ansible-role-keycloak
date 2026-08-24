@@ -1,14 +1,55 @@
 # SPDX-FileCopyrightText: 2026 Suguru Hirahara
 # SPDX-FileCopyrightText: 2026 spatterlight
+# SPDX-FileCopyrightText: 2026 Slavi Pantaleev
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 ---
-- name: Verify Keycloak systemd service
+- name: Verify Keycloak
   hosts: all
   become: true
   gather_facts: false
+
+  vars:
+    # Everything Keycloak serves lives underneath `keycloak_path_prefix`, which
+    # the role hands to the server as `KC_HTTP_RELATIVE_PATH`.
+    keycloak_verify_base_url: "http://127.0.0.1:{{ keycloak_molecule_http_bind_port }}{{ keycloak_path_prefix }}"
+    keycloak_verify_management_url: "http://127.0.0.1:{{ keycloak_molecule_management_bind_port }}{{ keycloak_path_prefix }}"
+
+    # The container name that the role derives from `keycloak_identifier`.
+    # Role defaults are not in scope in a verify play, so it is spelled out.
+    keycloak_verify_container: keycloak
+
+    # The realm and client that the verify play creates through the admin API
+    # and reads back. Neither exists in a fresh installation.
+    keycloak_verify_realm: molecule
+    keycloak_verify_client_id: molecule-client
+    keycloak_verify_client_redirect_uri: https://molecule.example.com/callback
+
   tasks:
+    # Role defaults are not in scope in a verify play, but the version that
+    # Renovate bumps lives in them and is what the running server is checked
+    # against below. Only leaf literals may be read out of this - anything
+    # Jinja-derived would be resolved against an empty namespace.
+    - name: Load the Keycloak role defaults
+      ansible.builtin.include_vars:
+        file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+        name: keycloak_defaults
+
+    - name: Wait for Postgres service to become active (up to 180s)
+      ansible.builtin.systemd:
+        name: postgres.service
+      register: keycloak_verify_postgres_service
+      until: keycloak_verify_postgres_service.status.ActiveState == 'active'
+      retries: 36
+      delay: 5
+
+    - name: Assert Postgres service is active
+      ansible.builtin.assert:
+        that: keycloak_verify_postgres_service.status.ActiveState == 'active'
+        fail_msg: "postgres.service not active ({{ keycloak_verify_postgres_service.status.ActiveState }})"
+        success_msg: "postgres.service is active"
+
     - name: Wait for Keycloak service to become active (up to 180s)
       ansible.builtin.systemd:
         name: keycloak.service
@@ -17,6 +58,11 @@
       retries: 36
       delay: 5
 
+    # A `Type=simple` unit wrapping `docker start --attach` reports itself
+    # active as soon as that command has been spawned, and `Restart=always`
+    # brings it back after every crash - so an active unit here says only that
+    # something was launched recently, not that Keycloak is running. Everything
+    # below is what tells those two apart.
     - name: Assert Keycloak service is active
       ansible.builtin.assert:
         that: keycloak_service.status.ActiveState == 'active'
@@ -29,7 +75,299 @@
         cmd: journalctl -xeu keycloak.service
       changed_when: false
 
-    - name: Show Keycloak systemd service status summary
+    # Answered as soon as the Quarkus HTTP layer is up, which happens well
+    # before Keycloak has done anything useful.
+    - name: Wait for Keycloak to report itself alive (up to 5m)
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_management_url }}/health/live"
+        method: GET
+        status_code: [200, 404, 503]
+      register: keycloak_health_live
+      until: keycloak_health_live.status == 200
+      retries: 60
+      delay: 5
+
+    # Keycloak only reports itself ready once it has connected to Postgres and
+    # run its schema migrations, which on a fresh database is the bulk of the
+    # startup time. A generous budget, because this is a JVM doing real work.
+    - name: Wait for Keycloak to report itself ready (up to 6m)
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_management_url }}/health/ready"
+        method: GET
+        status_code: [200, 404, 503]
+      register: keycloak_health_ready
+      until: keycloak_health_ready.status == 200
+      retries: 72
+      delay: 5
+
+    - name: Assert Keycloak reports itself alive and ready
+      ansible.builtin.assert:
+        that:
+          - keycloak_health_live.json.status == 'UP'
+          - keycloak_health_ready.json.status == 'UP'
+          - keycloak_health_ready.json.checks | rejectattr('status', 'equalto', 'UP') | list | length == 0
+        fail_msg: >-
+          Keycloak is not healthy (live={{ keycloak_health_live.json.status }},
+          ready={{ keycloak_health_ready.json.status }}, checks={{ keycloak_health_ready.json.checks }})
+        success_msg: "Keycloak reports itself alive and ready, so it reaches its Postgres database"
+
+    # The health endpoints answer under the role's path prefix and nowhere else.
+    # Asking for them at the root proves the prefix is what moved them, rather
+    # than Keycloak happening to serve them everywhere.
+    - name: Retrieve the Keycloak health endpoint from outside the configured path prefix
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ keycloak_molecule_management_bind_port }}/health/ready"
+        method: GET
+        status_code: [200, 404]
+      register: keycloak_health_unprefixed
+
+    - name: Assert Keycloak serves its health endpoints only under the configured path prefix
+      ansible.builtin.assert:
+        that: keycloak_health_unprefixed.status == 404
+        fail_msg: >-
+          Keycloak answered /health/ready outside {{ keycloak_path_prefix }}
+          with {{ keycloak_health_unprefixed.status }}, so the path prefix did not reach the server
+        success_msg: "Keycloak serves its health endpoints only under {{ keycloak_path_prefix }}"
+
+    # The first rung that needs Keycloak to be more than reachable: this is the
+    # administrator that the role asked Keycloak to register on its first boot,
+    # authenticating against the master realm.
+    - name: Obtain an admin API token for the Keycloak administrator the role provisioned
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/realms/master/protocol/openid-connect/token"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          client_id: admin-cli
+          grant_type: password
+          username: "{{ keycloak_molecule_admin_username }}"
+          password: "{{ keycloak_molecule_admin_password }}"
+        status_code: [200, 400, 401, 503]
+      register: keycloak_admin_token
+
+    - name: Assert the Keycloak administrator the role provisioned can authenticate
+      ansible.builtin.assert:
+        that:
+          - keycloak_admin_token.status == 200
+          - keycloak_admin_token.json.token_type | lower == 'bearer'
+          - keycloak_admin_token.json.access_token | default('') | length > 0
+        fail_msg: "Keycloak did not issue an admin token (status={{ keycloak_admin_token.status }})"
+        success_msg: "Keycloak issued an admin token to the administrator the role provisioned"
+
+    # The counterpart of the rung above: without this, an installation that
+    # accepted any password at all would pass just as happily.
+    - name: Attempt to obtain a Keycloak admin API token with the wrong password
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/realms/master/protocol/openid-connect/token"
+        method: POST
+        body_format: form-urlencoded
+        body:
+          client_id: admin-cli
+          grant_type: password
+          username: "{{ keycloak_molecule_admin_username }}"
+          password: "not-{{ keycloak_molecule_admin_password }}"
+        status_code: [200, 400, 401]
+      register: keycloak_admin_token_wrong
+
+    - name: Assert Keycloak rejects the wrong administrator password
+      ansible.builtin.assert:
+        that:
+          - keycloak_admin_token_wrong.status == 400
+          - keycloak_admin_token_wrong.json.error == 'invalid_grant'
+          - "'access_token' not in keycloak_admin_token_wrong.json"
+        fail_msg: >-
+          Keycloak did not reject a wrong administrator password
+          (status={{ keycloak_admin_token_wrong.status }})
+        success_msg: "Keycloak rejects a wrong administrator password with invalid_grant"
+
+    # Creating a realm is the cheapest write that exercises the whole stack:
+    # the admin API authorizes it, Keycloak persists it into Postgres, and the
+    # server starts serving a new set of OIDC endpoints for it.
+    - name: Create a realm through the Keycloak admin API
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/admin/realms"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+        body_format: json
+        body:
+          realm: "{{ keycloak_verify_realm }}"
+          enabled: true
+        status_code: [201, 401, 409]
+      register: keycloak_realm_creation
+
+    - name: Assert Keycloak created the realm
+      ansible.builtin.assert:
+        that:
+          - keycloak_realm_creation.status == 201
+          - keycloak_realm_creation.location | urlsplit('path') == keycloak_path_prefix ~ '/admin/realms/' ~ keycloak_verify_realm
+        fail_msg: >-
+          Keycloak did not create the {{ keycloak_verify_realm }} realm
+          (status={{ keycloak_realm_creation.status }}, location={{ keycloak_realm_creation.location | default('') }})
+        success_msg: "Keycloak created the {{ keycloak_verify_realm }} realm"
+
+    - name: Read the created realm back through the Keycloak admin API
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/admin/realms/{{ keycloak_verify_realm }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+        status_code: [200, 401, 404]
+      register: keycloak_realm_readback
+
+    - name: Assert Keycloak persisted the realm it created
+      ansible.builtin.assert:
+        that:
+          - keycloak_realm_readback.status == 200
+          - keycloak_realm_readback.json.realm == keycloak_verify_realm
+          - keycloak_realm_readback.json.enabled
+          - keycloak_realm_readback.json.id | default('') | length > 0
+        fail_msg: >-
+          Keycloak did not serve the {{ keycloak_verify_realm }} realm back
+          (status={{ keycloak_realm_readback.status }})
+        success_msg: "Keycloak serves the {{ keycloak_verify_realm }} realm back from its database"
+
+    - name: Create a client in the created realm through the Keycloak admin API
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/admin/realms/{{ keycloak_verify_realm }}/clients"
+        method: POST
+        headers:
+          Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+        body_format: json
+        body:
+          clientId: "{{ keycloak_verify_client_id }}"
+          enabled: true
+          publicClient: true
+          redirectUris:
+            - "{{ keycloak_verify_client_redirect_uri }}"
+        status_code: [201, 401, 409]
+      register: keycloak_client_creation
+
+    - name: Assert Keycloak created the client
+      ansible.builtin.assert:
+        that:
+          - keycloak_client_creation.status == 201
+          - >-
+            keycloak_client_creation.location | urlsplit('path')
+            is match(keycloak_path_prefix ~ '/admin/realms/' ~ keycloak_verify_realm ~ '/clients/[0-9a-f-]+$')
+        fail_msg: >-
+          Keycloak did not create the {{ keycloak_verify_client_id }} client
+          (status={{ keycloak_client_creation.status }}, location={{ keycloak_client_creation.location | default('') }})
+        success_msg: "Keycloak created the {{ keycloak_verify_client_id }} client"
+
+    - name: Read the created client back through the Keycloak admin API
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/admin/realms/{{ keycloak_verify_realm }}/clients?clientId={{ keycloak_verify_client_id }}"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+        status_code: [200, 401, 404]
+      register: keycloak_client_readback
+
+    - name: Assert Keycloak persisted the client it created
+      ansible.builtin.assert:
+        that:
+          - keycloak_client_readback.status == 200
+          - keycloak_client_readback.json | length == 1
+          - keycloak_client_readback.json[0].clientId == keycloak_verify_client_id
+          - keycloak_client_readback.json[0].enabled
+          - keycloak_client_readback.json[0].redirectUris == [keycloak_verify_client_redirect_uri]
+        fail_msg: >-
+          Keycloak did not serve the {{ keycloak_verify_client_id }} client back
+          (status={{ keycloak_client_readback.status }})
+        success_msg: "Keycloak serves the {{ keycloak_verify_client_id }} client back with the redirect URI it was given"
+
+    # The realm created above is only an identity provider once it advertises
+    # itself as one. This document is what an OIDC client would fetch, and it is
+    # served without any authentication.
+    - name: Retrieve the OIDC discovery document of the created realm
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/realms/{{ keycloak_verify_realm }}/.well-known/openid-configuration"
+        method: GET
+        status_code: [200, 404]
+      register: keycloak_oidc_discovery
+
+    - name: Assert the created realm advertises a usable OIDC configuration
+      ansible.builtin.assert:
+        that:
+          - keycloak_oidc_discovery.status == 200
+          - keycloak_oidc_discovery.json.issuer | urlsplit('path') == keycloak_path_prefix ~ '/realms/' ~ keycloak_verify_realm
+          - >-
+            keycloak_oidc_discovery.json.token_endpoint | urlsplit('path')
+            == keycloak_path_prefix ~ '/realms/' ~ keycloak_verify_realm ~ '/protocol/openid-connect/token'
+          - >-
+            keycloak_oidc_discovery.json.jwks_uri | urlsplit('path')
+            == keycloak_path_prefix ~ '/realms/' ~ keycloak_verify_realm ~ '/protocol/openid-connect/certs'
+          - "'authorization_code' in keycloak_oidc_discovery.json.grant_types_supported"
+          - "'RS256' in keycloak_oidc_discovery.json.id_token_signing_alg_values_supported"
+        fail_msg: >-
+          The {{ keycloak_verify_realm }} realm did not advertise an OIDC configuration underneath
+          {{ keycloak_path_prefix }} (status={{ keycloak_oidc_discovery.status }},
+          issuer={{ keycloak_oidc_discovery.json.issuer | default('') }})
+        success_msg: >-
+          The {{ keycloak_verify_realm }} realm advertises its OIDC endpoints underneath
+          {{ keycloak_path_prefix }}, so `keycloak_path_prefix` reached the running server
+
+    - name: Retrieve the OIDC discovery document from outside the configured path prefix
+      ansible.builtin.uri:
+        url: "http://127.0.0.1:{{ keycloak_molecule_http_bind_port }}/realms/{{ keycloak_verify_realm }}/.well-known/openid-configuration"
+        method: GET
+        status_code: [200, 404]
+      register: keycloak_oidc_discovery_unprefixed
+
+    - name: Assert Keycloak serves the OIDC discovery document only under the configured path prefix
+      ansible.builtin.assert:
+        that: keycloak_oidc_discovery_unprefixed.status == 404
+        fail_msg: >-
+          Keycloak answered the OIDC discovery document outside {{ keycloak_path_prefix }}
+          with {{ keycloak_oidc_discovery_unprefixed.status }}
+        success_msg: "Keycloak serves the OIDC discovery document only under {{ keycloak_path_prefix }}"
+
+    # First of two version surfaces: what the running server says about itself.
+    # The admin console page cannot answer this - it stamps an opaque
+    # `resourceVersion` hash into its asset URLs rather than the Keycloak
+    # version - so the admin API is the only place the running process names it.
+    - name: Retrieve the Keycloak server info
+      ansible.builtin.uri:
+        url: "{{ keycloak_verify_base_url }}/admin/serverinfo"
+        method: GET
+        headers:
+          Authorization: "Bearer {{ keycloak_admin_token.json.access_token }}"
+        status_code: [200, 401, 403]
+      register: keycloak_server_info
+
+    # Second version surface: the image reference the role actually handed to
+    # Docker. Together with the rung above this covers both directions - the
+    # role asked for this version, and the process answering the admin API is
+    # running it.
+    - name: Inspect the Keycloak container
+      ansible.builtin.command:
+        cmd: "docker inspect {{ keycloak_verify_container }}"
+      register: keycloak_container_inspect
+      changed_when: false
+
+    - name: Assert the running Keycloak is the version this role installs
+      ansible.builtin.assert:
+        that:
+          - keycloak_server_info.status == 200
+          - keycloak_server_info.json.systemInfo.version == keycloak_defaults.keycloak_version | string
+          - >-
+            (keycloak_container_inspect.stdout | from_json | first).Config.Image
+            | split(':') | last == keycloak_defaults.keycloak_version | string
+        fail_msg: >-
+          Keycloak is not running {{ keycloak_defaults.keycloak_version }}
+          (admin API reports {{ keycloak_server_info.json.systemInfo.version | default('nothing') }},
+          container image is {{ (keycloak_container_inspect.stdout | from_json | first).Config.Image }})
+        success_msg: >-
+          The Keycloak container runs {{ keycloak_defaults.keycloak_version }} and its admin API
+          reports the same version
+
+    - name: Show Keycloak verification summary
       ansible.builtin.debug:
         msg:
           - "Keycloak systemd: {{ keycloak_service.status.ActiveState }}"
+          - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
+          - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_inspect.stdout | from_json | first).Config.Image }})"
+          - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
+          - "Keycloak client: {{ keycloak_client_readback.json[0].clientId }} -> {{ keycloak_client_readback.json[0].redirectUris | join(', ') }}"
+          - "Keycloak OIDC issuer: {{ keycloak_oidc_discovery.json.issuer }}"
