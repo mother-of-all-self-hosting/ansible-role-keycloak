@@ -3,7 +3,7 @@ galaxy_info:
   author: etke.cc
   company: etke.cc
   role_name: keycloak
-  namespace: etkecc
+  namespace: mash
   description: Keycloak
   platforms:
     - name: Debian
