@@ -342,7 +342,7 @@
     # running it.
     - name: Inspect the Keycloak container
       ansible.builtin.command:
-        cmd: "docker inspect {{ keycloak_verify_container }}"
+        cmd: "docker container inspect {{ keycloak_verify_container }}"
       register: keycloak_container_inspect
       changed_when: false
 
