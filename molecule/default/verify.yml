@@ -353,13 +353,8 @@
           - >-
             (keycloak_container_inspect.stdout | from_json | first).Config.Image
             | split(':') | last == keycloak_defaults.keycloak_version | string
-        fail_msg: >-
-          Keycloak is not running {{ keycloak_defaults.keycloak_version }}
-          (admin API reports {{ keycloak_server_info.json.systemInfo.version | default('nothing') }},
-          container image is {{ (keycloak_container_inspect.stdout | from_json | first).Config.Image }})
-        success_msg: >-
-          The Keycloak container runs {{ keycloak_defaults.keycloak_version }} and its admin API
-          reports the same version
+        fail_msg: "Keycloak reports {{ keycloak_server_info.json.systemInfo.version | default('none') }}, expected {{ keycloak_defaults.keycloak_version }}"
+        success_msg: "Keycloak reports {{ keycloak_server_info.json.systemInfo.version }}"
 
     - name: Show the Keycloak verification summary
       ansible.builtin.debug:
