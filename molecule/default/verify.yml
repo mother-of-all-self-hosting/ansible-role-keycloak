@@ -361,12 +361,12 @@
           The Keycloak container runs {{ keycloak_defaults.keycloak_version }} and its admin API
           reports the same version
 
-    - name: Show Keycloak verification summary
+    - name: Show the Keycloak verification summary
       ansible.builtin.debug:
         msg:
           - "Keycloak systemd: {{ keycloak_service.status.ActiveState }}"
-          - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
           - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_inspect.stdout | from_json | first).Config.Image }})"
+          - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
           - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
           - "Keycloak client: {{ keycloak_client_readback.json[0].clientId }} -> {{ keycloak_client_readback.json[0].redirectUris | join(', ') }}"
           - "Keycloak OIDC issuer: {{ keycloak_oidc_discovery.json.issuer }}"
