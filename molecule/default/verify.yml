@@ -27,11 +27,10 @@
     keycloak_verify_client_redirect_uri: https://molecule.example.com/callback
 
   tasks:
-    # Role defaults are not in scope in a verify play, but the version that
-    # Renovate bumps lives in them and is what the running server is checked
-    # against below. Only leaf literals may be read out of this - anything
-    # Jinja-derived would be resolved against an empty namespace.
-    - name: Load the Keycloak role defaults
+    # The role is not included in this playbook, so its defaults are not in
+    # scope. Reading defaults/main.yml directly ties the version assertion
+    # below.
+    - name: Load the role defaults
       ansible.builtin.include_vars:
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: keycloak_defaults
