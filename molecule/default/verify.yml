@@ -35,40 +35,47 @@
         file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
         name: keycloak_defaults
 
-    - name: Wait for Postgres service to become active (up to 180s)
-      ansible.builtin.systemd:
+    - name: Wait for the Postgres systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
         name: postgres.service
       register: keycloak_verify_postgres_service
       until: keycloak_verify_postgres_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
-    - name: Assert Postgres service is active
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
+    - name: Assert the Postgres systemd service is active
       ansible.builtin.assert:
         that: keycloak_verify_postgres_service.status.ActiveState == 'active'
-        fail_msg: "postgres.service not active ({{ keycloak_verify_postgres_service.status.ActiveState }})"
+        fail_msg: "postgres.service is not active ({{ keycloak_verify_postgres_service.status.ActiveState }})"
         success_msg: "postgres.service is active"
 
-    - name: Wait for Keycloak service to become active (up to 180s)
-      ansible.builtin.systemd:
+    - name: Wait for the Keycloak systemd service to become active (up to 180s)
+      ansible.builtin.systemd_service:
         name: keycloak.service
       register: keycloak_service
       until: keycloak_service.status.ActiveState == 'active'
       retries: 36
       delay: 5
+      # So that giving up is reported by the assertion below rather than as a
+      # wall of systemd unit properties.
+      failed_when: false
 
-    # A `Type=simple` unit wrapping `docker start --attach` reports itself
-    # active as soon as that command has been spawned, and `Restart=always`
-    # brings it back after every crash - so an active unit here says only that
-    # something was launched recently, not that Keycloak is running. Everything
-    # below is what tells those two apart.
-    - name: Assert Keycloak service is active
+    # `Restart=always` in the systemd unit means that even a container which crashes
+    # and gets restarted reads as active here, so this is a precondition rather than
+    # a result.
+    - name: Assert the Keycloak systemd service is active
       ansible.builtin.assert:
         that: keycloak_service.status.ActiveState == 'active'
-        fail_msg: "keycloak.service not active ({{ keycloak_service.status.ActiveState }})"
+        fail_msg: "keycloak.service is not active ({{ keycloak_service.status.ActiveState }})"
         success_msg: "keycloak.service is active"
 
-    - name: Retrieve Keycloak service log for debugging
+    - name: Retrieve the Keycloak systemd service log for debugging
       when: keycloak_debug_service_enabled | bool
       ansible.builtin.command:
         cmd: journalctl -xeu keycloak.service
