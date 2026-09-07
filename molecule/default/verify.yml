@@ -342,7 +342,7 @@
     - name: Inspect the Keycloak container
       ansible.builtin.command:
         cmd: "docker container inspect {{ keycloak_container }}"
-      register: keycloak_container_inspect
+      register: keycloak_container_raw
       changed_when: false
 
     - name: Assert the running Keycloak is the version this role installs
@@ -351,7 +351,7 @@
           - keycloak_server_info.status == 200
           - keycloak_server_info.json.systemInfo.version == keycloak_defaults.keycloak_version | string
           - >-
-            (keycloak_container_inspect.stdout | from_json | first).Config.Image
+            (keycloak_container_raw.stdout | from_json | first).Config.Image
             | split(':') | last == keycloak_defaults.keycloak_version | string
         fail_msg: "Keycloak reports {{ keycloak_server_info.json.systemInfo.version | default('none') }}, expected {{ keycloak_defaults.keycloak_version }}"
         success_msg: "Keycloak reports {{ keycloak_server_info.json.systemInfo.version }}"
@@ -360,7 +360,7 @@
       ansible.builtin.debug:
         msg:
           - "Keycloak systemd: {{ keycloak_service.status.ActiveState }}"
-          - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_inspect.stdout | from_json | first).Config.Image }})"
+          - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_raw.stdout | from_json | first).Config.Image }})"
           - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
           - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
           - "Keycloak client: {{ keycloak_client_readback.json[0].clientId }} -> {{ keycloak_client_readback.json[0].redirectUris | join(', ') }}"
