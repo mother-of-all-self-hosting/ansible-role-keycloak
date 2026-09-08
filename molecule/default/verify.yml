@@ -78,7 +78,7 @@
     - name: Retrieve the Keycloak systemd service log for debugging
       when: keycloak_debug_service_enabled | bool
       ansible.builtin.command:
-        cmd: journalctl -xeu keycloak.service
+        cmd: journalctl --no-pager --output=cat --unit=keycloak.service
       changed_when: false
 
     # Answered as soon as the Quarkus HTTP layer is up, which happens well
