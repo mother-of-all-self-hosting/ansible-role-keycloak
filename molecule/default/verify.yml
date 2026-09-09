@@ -27,6 +27,8 @@
     keycloak_verify_client_redirect_uri: https://molecule.example.com/callback
 
   tasks:
+    - name: Verify that Keycloak works
+      block:
     # The role is not included in this playbook, so its defaults are not in
     # scope. Reading defaults/main.yml directly ties the version assertion
     # below.
@@ -372,3 +374,19 @@
           - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
           - "Keycloak client: {{ keycloak_client_readback.json[0].clientId }} -> {{ keycloak_client_readback.json[0].redirectUris | join(', ') }}"
           - "Keycloak OIDC issuer: {{ keycloak_oidc_discovery.json.issuer }}"
+
+      rescue:
+        # Whatever went wrong, the reason is almost always in the systemd service log.
+        - name: Retrieve the Keycloak systemd service log
+          ansible.builtin.command:
+            cmd: journalctl --no-pager --output=cat --unit=keycloak.service
+          register: keycloak_service_log
+          changed_when: false
+
+        - name: Show the Keycloak systemd service log
+          ansible.builtin.debug:
+            var: keycloak_service_log.stdout_lines
+
+        - name: Fail because verification did not pass
+          ansible.builtin.fail:
+            msg: "Keycloak verification failed. The systemd service log is printed above."
