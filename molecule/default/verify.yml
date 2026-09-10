@@ -26,6 +26,10 @@
     keycloak_verify_client_id: molecule-client
     keycloak_verify_client_redirect_uri: https://molecule.example.com/callback
 
+    keycloak_verify_units:
+      - postgres.service
+      - keycloak.service
+
   tasks:
     - name: Verify that Keycloak works
       block:
@@ -37,51 +41,32 @@
             file: "{{ lookup('env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
             name: keycloak_defaults
 
-        - name: Wait for the Postgres systemd service to become active (up to 180s)
+        - name: Wait for the Keycloak systemd services to become active (up to 180s each)
           ansible.builtin.systemd_service:
-            name: postgres.service
-          register: keycloak_verify_postgres_service
-          until: keycloak_verify_postgres_service.status.ActiveState == 'active'
+            name: "{{ item }}"
+          register: keycloak_services
+          until: keycloak_services.status.ActiveState == 'active'
           retries: 36
           delay: 5
-          # So that giving up is reported by the assertion below rather than as a
-          # wall of systemd unit properties.
-          failed_when: false
+          loop: "{{ keycloak_verify_units }}"
 
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
         # a result.
-        - name: Assert the Postgres systemd service is active
+        - name: Assert the Keycloak systemd services are active
           ansible.builtin.assert:
-            that: keycloak_verify_postgres_service.status.ActiveState == 'active'
-            fail_msg: "postgres.service is not active ({{ keycloak_verify_postgres_service.status.ActiveState }})"
-            success_msg: "postgres.service is active"
+            that: keycloak_services.results | map(attribute='status.ActiveState') | unique | list == ['active']
+            fail_msg: >-
+              Not every service is active:
+              {{ dict(keycloak_verify_units | zip(keycloak_services.results | map(attribute='status.ActiveState'))) }}
+            success_msg: "Both the Postgres and the Keycloak systemd services are active"
 
-        - name: Wait for the Keycloak systemd service to become active (up to 180s)
-          ansible.builtin.systemd_service:
-            name: keycloak.service
-          register: keycloak_service
-          until: keycloak_service.status.ActiveState == 'active'
-          retries: 36
-          delay: 5
-          # So that giving up is reported by the assertion below rather than as a
-          # wall of systemd unit properties.
-          failed_when: false
-
-        # `Restart=always` in the systemd unit means that even a container which crashes
-        # and gets restarted reads as active here, so this is a precondition rather than
-        # a result.
-        - name: Assert the Keycloak systemd service is active
-          ansible.builtin.assert:
-            that: keycloak_service.status.ActiveState == 'active'
-            fail_msg: "keycloak.service is not active ({{ keycloak_service.status.ActiveState }})"
-            success_msg: "keycloak.service is active"
-
-        - name: Retrieve the Keycloak systemd service log for debugging
+        - name: Retrieve the Keycloak systemd services log for debugging
           when: keycloak_debug_service_enabled | bool
           ansible.builtin.command:
-            cmd: journalctl --no-pager --output=cat --unit=keycloak.service
+            cmd: "journalctl --no-pager --output=cat --unit={{ item }}"
           changed_when: false
+          loop: "{{ keycloak_verify_units }}"
 
         # Answered as soon as the Quarkus HTTP layer is up, which happens well
         # before Keycloak has done anything useful.
@@ -368,7 +353,7 @@
         - name: Show the Keycloak verification summary
           ansible.builtin.debug:
             msg:
-              - "Keycloak systemd: {{ keycloak_service.status.ActiveState }}"
+              - "Keycloak systemd: {{ dict(keycloak_verify_units | zip(keycloak_services.results | map(attribute='status.ActiveState'))) }}"
               - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_raw.stdout | from_json | first).Config.Image }})"
               - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
               - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
