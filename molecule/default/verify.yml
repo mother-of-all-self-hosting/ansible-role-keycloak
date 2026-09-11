@@ -49,6 +49,9 @@
           retries: 36
           delay: 5
           loop: "{{ keycloak_verify_units }}"
+          # So that giving up is reported by the assertion below rather than as a
+          # wall of systemd unit properties.
+          failed_when: false
 
         # `Restart=always` in the systemd unit means that even a container which crashes
         # and gets restarted reads as active here, so this is a precondition rather than
@@ -59,7 +62,7 @@
             fail_msg: >-
               Not every service is active:
               {{ dict(keycloak_verify_units | zip(keycloak_services.results | map(attribute='status.ActiveState'))) }}
-            success_msg: "Both the Postgres and the Keycloak systemd services are active"
+            success_msg: "Every systemd service is active"
 
         - name: Retrieve the Keycloak systemd services log for debugging
           when: keycloak_debug_service_enabled | bool
@@ -353,7 +356,7 @@
         - name: Show the Keycloak verification summary
           ansible.builtin.debug:
             msg:
-              - "Keycloak systemd: {{ dict(keycloak_verify_units | zip(keycloak_services.results | map(attribute='status.ActiveState'))) }}"
+              - "Keycloak systemd: {% for unit, state in keycloak_verify_units | zip(keycloak_services.results | map(attribute='status.ActiveState')) %}{{ unit }} ({{ state }}){% if not loop.last %}, {% endif %}{% endfor %}"
               - "Keycloak version: {{ keycloak_server_info.json.systemInfo.version }} (image {{ (keycloak_container_raw.stdout | from_json | first).Config.Image }})"
               - "Keycloak health: live={{ keycloak_health_live.json.status }}, ready={{ keycloak_health_ready.json.status }}"
               - "Keycloak realm: {{ keycloak_realm_readback.json.realm }} ({{ keycloak_realm_readback.json.id }})"
