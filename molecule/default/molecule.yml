@@ -31,6 +31,7 @@ provisioner:
       all:
         # Helper variables
         keycloak_debug_service_enabled: false
+        keycloak_restarts_check_enabled: true
 
         # The port on the host that Keycloak's HTTP listener is published on.
         keycloak_molecule_http_bind_port: 8080
