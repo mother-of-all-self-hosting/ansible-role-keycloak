@@ -149,6 +149,22 @@ keycloak_container_extra_arguments: "{{ keycloak_container_extra_arguments_auto 
 keycloak_container_extra_arguments_auto: []
 keycloak_container_extra_arguments_custom: []
 
+# A list of extra arguments to pass to the process inside the container
+# Example: ['--SOME_ARGUMENT']
+keycloak_process_extra_arguments: "{{ keycloak_process_extra_arguments_auto + keycloak_process_extra_arguments_custom }}"
+keycloak_process_extra_arguments_auto: |
+  {{
+    ['start'] +
+    (
+      [
+        '--spi-theme-static-max-age=-1',
+        '--spi-theme-cache-themes=false',
+        '--spi-theme-cache-templates=false',
+      ] if keycloak_theme_development_mode_enabled else []
+    )
+  }}
+keycloak_process_extra_arguments_custom: []
+
 # Specifies the value of the `Permissions-Policy` header.
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Permissions-Policy
 keycloak_http_header_permissions_policy: "{{ 'interest-cohort=()' if keycloak_floc_optout_enabled else '' }}"
@@ -219,24 +235,6 @@ keycloak_container_cleanup_command: |
   echo "Failed to remove stale container {{ keycloak_identifier }} after {{ keycloak_container_cleanup_timeout_seconds }} attempts" >&2;
   exit 1
 
-# The command to run in the container.
-# By default, we start a production server.
-keycloak_container_command: start
-
-# Command arguments added to the command (keycloak_container_command)
-keycloak_container_command_arguments: "{{ keycloak_container_command_arguments_auto + keycloak_container_command_arguments_custom }}"
-keycloak_container_command_arguments_auto: |
-  {{
-    (
-      [
-        '--spi-theme-static-max-age=-1',
-        '--spi-theme-cache-themes=false',
-        '--spi-theme-cache-templates=false',
-      ] if keycloak_theme_development_mode_enabled else []
-    )
-  }}
-keycloak_container_command_arguments_custom: []
-
 # Specify the timezone
 keycloak_environment_variables_tz: UTC
 
@@ -262,7 +260,7 @@ keycloak_environment_variable_kc_hostname_url: "{{ keycloak_scheme }}://{{ keycl
 # Controls the `KC_HTTP_ENABLED` environment variable.
 # In production mode, when this is disabled and KC_PROXY=none, only an HTTPS server is started (which requires keys, etc).
 # To use this behind a reverse-proxy:
-# - either start a dev server, not a production server (see `keycloak_container_command`)
+# - either start a dev server, not a production server (see `keycloak_process_extra_arguments_auto`)
 # - or, keep running a production server and enable this
 # - or, keep running a production server and set KC_PROXY to true (see `keycloak_environment_variable_kc_proxy`)
 # See: https://www.keycloak.org/docs/24.0.0/upgrading/#deprecated-proxy-option
@@ -327,9 +325,9 @@ keycloak_environment_variable_kc_bootstrap_admin_username: ""
 keycloak_environment_variable_kc_bootstrap_admin_password: ""
 
 # Controls if various command line flags are passed to Keycloak to make it not cache themes.
-# See: keycloak_container_command_arguments_auto
+# See: keycloak_process_extra_arguments_auto
 # See: https://www.keycloak.org/docs/latest/server_development/#creating-a-theme
-# The same can also be done by changing using the `start-dev` command (see `keycloak_container_command`), even without passing any flags to it.
+# The same can also be done by changing using the `start-dev` command (see `keycloak_process_extra_arguments_auto`), even without passing any flags to it.
 keycloak_theme_development_mode_enabled: false
 
 # Specify a database driver to use

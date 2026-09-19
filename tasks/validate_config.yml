@@ -17,6 +17,10 @@
     - { "old": "keycloak_container_labels_middleware_metrics_redirection_enabled", "new": "keycloak_container_labels_traefik_metrics_middleware_redirection_enabled" }
     - { "old": "keycloak_container_labels_middleware_metrics_redirection_default_path", "new": "keycloak_container_labels_traefik_metrics_middleware_redirection_default_path" }
     - { "old": "keycloak_container_labels_middleware_metrics_redirection_target_path", "new": "keycloak_container_labels_traefik_metrics_middleware_redirection_target_path" }
+    - { "old": "keycloak_container_command", "new": "<Removed>" }
+    - { "old": "keycloak_container_command_arguments", "new": "keycloak_process_extra_arguments" }
+    - { "old": "keycloak_container_command_arguments_auto", "new": "keycloak_process_extra_arguments_auto" }
+    - { "old": "keycloak_container_command_arguments_custom", "new": "keycloak_process_extra_arguments_custom" }
     - { "old": "keycloak_systemd_required_systemd_services_list_default", "new": "keycloak_systemd_required_services_list_default" }
     - { "old": "keycloak_systemd_required_systemd_services_list_auto", "new": "keycloak_systemd_required_services_list_auto" }
     - { "old": "keycloak_systemd_required_systemd_services_list_custom", "new": "keycloak_systemd_required_services_list_custom" }

@@ -64,7 +64,7 @@ provisioner:
 
         # `keycloak_environment_variable_kc_http_enabled` defaults to whatever
         # `keycloak_container_labels_traefik_enabled` is, and the role starts a
-        # production server (`keycloak_container_command: start`), which refuses
+        # production server, which refuses
         # to boot without either HTTPS key material or HTTP explicitly enabled:
         # "Key material not provided to setup HTTPS". With Traefik turned off
         # above, this scenario has to turn HTTP on by hand.
