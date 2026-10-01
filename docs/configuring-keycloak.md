@@ -20,15 +20,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 # Setting up Keycloak
 
-This is an [Ansible](https://www.ansible.com/) role which installs [Keycloak](https://github.com/hackmdio/keycloak) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
+This is an [Ansible](https://www.ansible.com/) role which installs [Keycloak](https://www.keycloak.org) to run as a [Docker](https://www.docker.com/) container wrapped in a systemd service.
 
-Keycloak is a realtime collaborative markdown notes on all platforms.
+Keycloak is an open-source identity and access management solution.
 
-See the project's [documentation](https://hackmd.io/c/keycloak-documentation) to learn what Keycloak does and why it might be useful to you.
+See the project's [documentation](https://www.keycloak.org/documentation) to learn what Keycloak does and why it might be useful to you.
 
 ## Prerequisites
 
-To run a Keycloak instance it is necessary to prepare a database. You can use a [MySQL](https://www.mysql.com/) compatible database server or [Postgres](https://www.postgresql.org/).
+To run a Keycloak instance it is necessary to prepare a database. You can use a [MySQL](https://www.mysql.com/) compatible database server, [Postgres](https://www.postgresql.org/), MS SQL, or Oracle.
 
 If you are looking for Ansible roles for a MySQL compatible server or Postgres, you can check out [ansible-role-mariadb](https://github.com/mother-of-all-self-hosting/ansible-role-mariadb) and [ansible-role-postgres](https://github.com/mother-of-all-self-hosting/ansible-role-postgres), both of which are maintained by the [Mother-of-All-Self-Hosting (MASH)](https://github.com/mother-of-all-self-hosting) team.
 
@@ -64,59 +64,35 @@ keycloak_hostname: "example.com"
 
 After adjusting the hostname, make sure to adjust your DNS records to point the domain to your server.
 
-**Note**: hosting Keycloak under a subpath (by configuring the `keycloak_path_prefix` variable) does not seem to be possible due to Keycloak's technical limitations.
-
 ### Specify database
 
-It is necessary to select database used by Keycloak from a MySQL compatible database and Postgres.
+You can specify a database used by Keycloak. By default it is configured to use Postgres.
 
-To use Postgres, add the following configuration to your `vars.yml` file:
+To use MariaDB, add the following configuration to your `vars.yml` file:
 
 ```yaml
-keycloak_database_type: postgres
+keycloak_database_type: mariadb
 ```
 
-Set `mysql` to use a MySQL compatible database.
+Set `mysql` for MySQL, `mssql` for MS SQL, or `oracle` for Oracle, respectively.
 
 For other settings, check variables such as `keycloak_database_*` on [`defaults/main.yml`](../defaults/main.yml).
 
-### Set a random string for signing cookie
+### Set details for the admin user
 
-You also need to set a random string for signing the session cookie. To do so, add the following configuration to your `vars.yml` file. The value can be generated with `pwgen -s 64 1` or in another way.
-
-```yaml
-keycloak_environment_variables_cmd_session_secret: YOUR_SECRET_KEY_HERE
-```
-
-### Enabling account registration
-
-To use Keycloak you need to create an account and log in to it on the browser.
-
-In order to prevent abuse, account registration is disabled by default. You can enable account registration and authentication with an email address by adding the following configuration to your `vars.yml` file:
+You also need to create an instance's admin user. To create one, add the following configuration to your `vars.yml` file. Make sure to replace values with your own ones.
 
 ```yaml
-# Control if email sign-in is allowed
-keycloak_environment_variables_cmd_email: true
-
-# Control if email registration is allowed
-keycloak_environment_variables_cmd_allow_email_register: true
+keycloak_environment_variable_kc_bootstrap_admin_username: ADMIN_USERNAME_HERE
+keycloak_environment_variable_kc_bootstrap_admin_password: ADMIN_PASSWORD_HERE
 ```
+
+Generating a strong password (e.g. `pwgen -s 64 1`) is recommended for `keycloak_environment_variable_kc_bootstrap_admin_password`.
 
 >[!NOTE]
-> The email address verification with an email server is not available.
-
-Refer to [this section](https://hackmd.io/c/keycloak-documentation/%2Fs%2Fkeycloak-configuration#Authentication) on the official documentation for details about setting up other authentication system like LDAP and OAuth.
-
-### Configuring default permission (optional)
-
-It is possible to change the default access permission to a note by adding the following configuration to your `vars.yml` file:
-
-```yaml
-# Valid values: editable, freely, limited, locked, private, protected
-keycloak_environment_variables_cmd_default_permission: PERMISSION_STRING_HERE
-```
-
-Refer to [this section](https://hackmd.io/@keycloak/note-permission#Manage-Note-Permission) on the official documentation for details about the permissions.
+>
+> - On each start after that, Keycloak will attempt to create the user again and report a non-fatal error (Keycloak will continue running).
+> - Subsequent changes to the password will not affect an existing user's password.
 
 ### Extending the configuration
 
@@ -126,7 +102,7 @@ Take a look at:
 
 - [`defaults/main.yml`](../defaults/main.yml) for some variables that you can customize via your `vars.yml` file. You can override settings (even those that don't have dedicated playbook variables) using the `keycloak_environment_variables_additional_variables` variable
 
-Refer to [the official documentation](https://hackmd.io/c/keycloak-documentation/%2Fs%2Fkeycloak-configuration) for a complete list of Keycloak's config options that you can put in `keycloak_environment_variables_additional_variables`.
+Refer to [the official documentation](https://www.keycloak.org/server/all-config) for a complete list of Keycloak's config options that you can put in `keycloak_environment_variables_additional_variables`.
 
 ## Installing
 
@@ -142,7 +118,7 @@ If you use the MASH playbook, the shortcut commands with the [`just` program](ht
 
 After running the command for installation, Keycloak becomes available at the specified hostname like `https://example.com`.
 
-To get started, open the URL with a web browser to log in to the instance, if anonymous usage is disallowed (which is the default setting).
+To get started, open the URL with a web browser to log in to the instance with the administrator account. The account is created on the first start, as defined with the `keycloak_environment_variable_kc_bootstrap_admin_username` and `keycloak_environment_variable_kc_bootstrap_admin_password` variables.
 
 ## Troubleshooting
 
