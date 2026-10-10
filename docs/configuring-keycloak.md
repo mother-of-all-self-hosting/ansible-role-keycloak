@@ -78,7 +78,7 @@ Set `mysql` for MySQL, `mssql` for MS SQL, or `oracle` for Oracle, respectively.
 
 For other settings, check variables such as `keycloak_database_*` on [`defaults/main.yml`](../defaults/main.yml).
 
-### Set details for the admin user
+### Set administrator's account details
 
 You also need to create an instance's admin user. To create one, add the following configuration to your `vars.yml` file. Make sure to replace values with your own ones.
 
@@ -92,7 +92,7 @@ Generating a strong password (e.g. `pwgen -s 64 1`) is recommended for `keycloak
 >[!NOTE]
 >
 > - On each start after that, Keycloak will attempt to create the user again and report a non-fatal error (Keycloak will continue running).
-> - Subsequent changes to the password will not affect an existing user's password.
+> - Subsequent changes to them will not affect the existing user.
 
 ### Extending the configuration
 
