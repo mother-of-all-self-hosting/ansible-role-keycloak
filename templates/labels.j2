@@ -13,11 +13,11 @@ traefik.docker.network={{ keycloak_container_labels_traefik_docker_network }}
 
 traefik.http.services.{{ keycloak_identifier }}.loadbalancer.server.port={{ keycloak_container_http_port }}
 
-############################################################
-#                                                          #
-# Public                                                   #
-#                                                          #
-############################################################
+########################################################################
+#                                                                      #
+# Public                                                               #
+#                                                                      #
+########################################################################
 
 {% set middlewares = [] %}
 
@@ -71,19 +71,18 @@ traefik.http.routers.{{ keycloak_identifier }}.tls={{ keycloak_container_labels_
 traefik.http.routers.{{ keycloak_identifier }}.tls.certResolver={{ keycloak_container_labels_traefik_tls_certResolver }}
 {% endif %}
 
-############################################################
-#                                                          #
-# /Public                                                  #
-#                                                          #
-############################################################
-
+########################################################################
+#                                                                      #
+# /Public                                                              #
+#                                                                      #
+########################################################################
 
 {% if keycloak_container_labels_traefik_metrics_enabled %}
-############################################################
-#                                                          #
-# Metrics                                                  #
-#                                                          #
-############################################################
+########################################################################
+#                                                                      #
+# Metrics                                                              #
+#                                                                      #
+########################################################################
 
 {% set middlewares = [] %}
 
@@ -111,11 +110,11 @@ traefik.http.routers.{{ keycloak_identifier }}-metrics.tls={{ keycloak_container
 traefik.http.routers.{{ keycloak_identifier }}-metrics.tls.certResolver={{ keycloak_container_labels_traefik_metrics_traefik_tls_certResolver }}
 {% endif %}
 
-############################################################
-#                                                          #
-# /Metrics                                                 #
-#                                                          #
-############################################################
+########################################################################
+#                                                                      #
+# /Metrics                                                             #
+#                                                                      #
+########################################################################
 {% endif %}
 
 {% endif %}
