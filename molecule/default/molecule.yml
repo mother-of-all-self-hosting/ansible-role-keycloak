@@ -94,8 +94,8 @@ provisioner:
         keycloak_database_type: postgres
         keycloak_database_hostname: "{{ postgres_connection_hostname }}"
         keycloak_database_port: "{{ postgres_connection_port }}"
-        keycloak_database_username: my_database_username
-        keycloak_database_password: my_database_password
+        keycloak_database_username: /#@my_database_username?%
+        keycloak_database_password: /#@my_database_password?%
         keycloak_database_name: keycloak
         keycloak_systemd_required_services_list_auto: |
           {{
